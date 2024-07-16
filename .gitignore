@@ -1,6 +1,12 @@
+# Build
 /node_modules/
 .eslint
 .dynamodb
-.env
 .esbuild/
+
+# Environment
+.env.local
+.env.production
+
+# Test
 coverage/

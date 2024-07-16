@@ -6,6 +6,25 @@ import { UserService } from "./user.service";
 const router = Router();
 const userService = new UserService();
 
+router.get("/", (_req: Request, res: Response, next: NextFunction) => {
+  userService
+    .findAll()
+    .then((data) => {
+      if (!data) {
+        res.sendStatus(404);
+      } else {
+        res.status(200).send(data);
+      }
+    })
+    .catch((err) => {
+      if (!isNaN(err.status) && err.status < 500) {
+        res.status(err.status).send(err.data);
+      } else {
+        next(err);
+      }
+    });
+});
+
 router.get("/:userId", (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
   userService

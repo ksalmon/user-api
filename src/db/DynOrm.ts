@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   GetCommand,
@@ -9,12 +9,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 
 const client = new DynamoDBClient({
-  region: process.env.AWS_REGION,
   endpoint: process.env.AWS_DYNAMODB_ENDPOINT,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.AWS_ACCESS_KEY_ID || "",
-  },
 });
 
 const docClient = DynamoDBDocumentClient.from(client);
@@ -24,6 +19,16 @@ class DynOrm {
 
   constructor(name: string) {
     this.name = name;
+  }
+
+  async findAll<T>(): Promise<GenericRecord & T[]> {
+    const command = new QueryCommand({
+      TableName: this.name,
+    });
+
+    const { Items } = await docClient.send(command);
+
+    return Items as GenericRecord & T[];
   }
 
   async find<T>(key: string): Promise<GenericRecord & T> {
@@ -113,7 +118,7 @@ class DynOrm {
       await docClient.send(command);
       return { success: true };
     } catch (err) {
-      return { success: false}
+      return { success: false };
     }
   }
 }

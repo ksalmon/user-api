@@ -4,7 +4,8 @@
   "description": "Lambda express application with Serverless framework",
   "scripts": {
     "test": "jest",
-    "dev": "sls offline start --stage local"
+    "dev": "sls offline start --stage development",
+    "deploy": "sls deploy --stage production --region us-east-1"
   },
   "author": "",
   "license": "ISC",

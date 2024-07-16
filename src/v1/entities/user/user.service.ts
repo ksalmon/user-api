@@ -6,6 +6,10 @@ class UserService {
     this.userRepository = new UserRepository();
   }
 
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.findAll();
+  }
+
   async find(userId: string): Promise<User> {
     return await this.userRepository.find(userId);
   }
