@@ -1,8 +1,9 @@
 # Build
 /node_modules/
+.esbuild/
 .eslint
 .dynamodb
-.esbuild/
+.serverless
 
 # Environment
 .env.local
