@@ -11,9 +11,9 @@ import {
 import { mockClient } from "aws-sdk-client-mock";
 
 describe("UserService", () => {
+  const userId = randomUUID();
   const userService = new UserService();
   const ddbMock = mockClient(DynamoDBDocumentClient);
-  const userId = randomUUID();
 
   beforeEach(() => {
     ddbMock.reset();
@@ -69,9 +69,10 @@ describe("UserService", () => {
     };
 
     ddbMock.on(GetCommand).resolves({
-      Item: updateUser,
+      Item: { id: userId, ...updateUser },
     });
     const response = await userService.update(userId, updateUser);
+
     expect(ddbMock).toHaveReceivedCommandWith(UpdateCommand, {
       TableName: "users",
       Key: { ["id"]: userId },
@@ -83,6 +84,10 @@ describe("UserService", () => {
   });
 
   it("#delete calls DynamoDB, removes record and returns a success status", async () => {
+    ddbMock.on(GetCommand).resolves({
+      Item: { id: userId, name: "John", email: "john@example.com" },
+    });
+
     const response = await userService.delete(userId);
     expect(ddbMock).toHaveReceivedCommandWith(DeleteCommand, {
       TableName: "users",

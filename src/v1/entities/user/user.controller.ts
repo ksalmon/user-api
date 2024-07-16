@@ -6,110 +6,60 @@ import { UserService } from "./user.service";
 const router = Router();
 const userService = new UserService();
 
-router.get("/", (_req: Request, res: Response, next: NextFunction) => {
-  userService
-    .findAll()
-    .then((data) => {
-      if (!data) {
-        res.sendStatus(404);
-      } else {
-        res.status(200).send(data);
-      }
-    })
-    .catch((err) => {
-      if (!isNaN(err.status) && err.status < 500) {
-        res.status(err.status).send(err.data);
-      } else {
-        next(err);
-      }
-    });
-});
-
-router.get("/:userId", (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.params;
-  userService
-    .find(userId)
-    .then((data) => {
-      if (!data) {
-        res.sendStatus(404);
-      } else {
-        res.status(200).send(data);
-      }
-    })
-    .catch((err) => {
-      if (!isNaN(err.status) && err.status < 500) {
-        res.status(err.status).send(err.data);
-      } else {
-        next(err);
-      }
-    });
-});
+router.get(
+  "/:userId",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    try {
+      const user = await userService.find(userId);
+      res.status(200).send(user);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 router.post(
   "/",
   validationMiddleware(CreateUserSchema),
-  (req: Request, res: Response, next: NextFunction) => {
-    userService
-      .create(req.body)
-      .then((data) => {
-        if (!data) {
-          res.sendStatus(404);
-        } else {
-          res.status(201).send(data);
-        }
-      })
-      .catch((err) => {
-        if (!isNaN(err.status) && err.status < 500) {
-          res.status(err.status).send(err.data);
-        } else {
-          next(err);
-        }
-      });
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { body } = req;
+    try {
+      const newUser = await userService.create(body);
+      res.status(201).send(newUser);
+    } catch (err) {
+      next(err);
+    }
   }
 );
 
 router.put(
   "/:userId",
   validationMiddleware(UpdateUserSchema),
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
-    userService
-      .update(userId, req.body)
-      .then((data) => {
-        if (!data) {
-          res.sendStatus(404);
-        } else {
-          res.status(200).send(data);
-        }
-      })
-      .catch((err) => {
-        if (!isNaN(err.status) && err.status < 500) {
-          res.status(err.status).send(err.data);
-        } else {
-          next(err);
-        }
-      });
+    const { body } = req;
+    try {
+      const updatedUser = await userService.update(userId, body);
+      res.status(200).send(updatedUser);
+    } catch (err) {
+      next(err);
+    }
   }
 );
 
-router.delete("/:userId", (req: Request, res: Response, next: NextFunction) => {
-  const { userId } = req.params;
-  userService
-    .delete(userId)
-    .then(({ success }) => {
-      if (success) {
-        res.sendStatus(204);
-      } else {
-        res.sendStatus(404);
-      }
-    })
-    .catch((err) => {
-      if (!isNaN(err.status) && err.status < 500) {
-        res.status(err.status).send(err.data);
-      } else {
-        next(err);
-      }
-    });
-});
+router.delete(
+  "/:userId",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+
+    try {
+      await userService.delete(userId);
+      res.sendStatus(204);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
 
 export { router as UserController };

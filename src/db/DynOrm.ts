@@ -21,16 +21,6 @@ class DynOrm {
     this.name = name;
   }
 
-  async findAll<T>(): Promise<GenericRecord & T[]> {
-    const command = new QueryCommand({
-      TableName: this.name,
-    });
-
-    const { Items } = await docClient.send(command);
-
-    return Items as GenericRecord & T[];
-  }
-
   async find<T>(key: string): Promise<GenericRecord & T> {
     const command = new GetCommand({
       TableName: this.name,
@@ -40,6 +30,16 @@ class DynOrm {
     });
 
     const { Item } = await docClient.send(command);
+
+    if (!Item) {
+      throw {
+        status: 404,
+        data: {
+          errors: ["Item does not exist`"],
+        },
+      };
+    }
+
     return Item as GenericRecord & T;
   }
 
@@ -64,6 +64,8 @@ class DynOrm {
     key: string,
     updateData: { [key: string]: string }
   ): Promise<GenericRecord & T> {
+    const existingItem = await this.find<T>(key);
+
     delete updateData.id;
     delete updateData.updated_at;
     delete updateData.created_at;
@@ -95,7 +97,7 @@ class DynOrm {
 
     const command = new UpdateCommand({
       TableName: this.name,
-      Key: { ["id"]: key },
+      Key: { ["id"]: existingItem.id },
       UpdateExpression,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
@@ -106,11 +108,12 @@ class DynOrm {
     return item;
   }
 
-  async delete(key: string): Promise<any> {
+  async delete<T>(key: string): Promise<{ success: boolean}> {
+    const existingItem = await this.find<T>(key);
     const command = new DeleteCommand({
       TableName: this.name,
       Key: {
-        id: key,
+        id: existingItem.id,
       },
     });
 
