@@ -1,12 +1,23 @@
-import * as AWS from "aws-sdk";
 import { randomUUID } from "crypto";
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
 
-const dbClient = new AWS.DynamoDB.DocumentClient({
-  region: "localhost",
-  endpoint: "http://0.0.0.0:8000",
-  accessKeyId: "MockAccessKeyId",
-  secretAccessKey: "MockSecretAccessKey",
+const client = new DynamoDBClient({
+  region: process.env.AWS_REGION,
+  endpoint: process.env.AWS_DYNAMODB_ENDPOINT,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_ACCESS_KEY_ID || "",
+  },
 });
+
+const docClient = DynamoDBDocumentClient.from(client);
 
 class DynOrm {
   name: string;
@@ -16,20 +27,20 @@ class DynOrm {
   }
 
   async find<T>(key: string): Promise<GenericRecord & T> {
-    const params = {
+    const command = new GetCommand({
       TableName: this.name,
       Key: {
         id: key,
       },
-    };
+    });
 
-    const result = await dbClient.get(params).promise();
-    return result.Item as GenericRecord & T;
+    const { Item } = await docClient.send(command);
+    return Item as GenericRecord & T;
   }
 
-  async create<T>(record: T ): Promise<GenericRecord & T> {
+  async create<T>(record: T): Promise<GenericRecord & T> {
     const recordId = randomUUID();
-    const params = {
+    const command = new PutCommand({
       TableName: this.name,
       Item: {
         id: recordId,
@@ -37,9 +48,9 @@ class DynOrm {
         updated_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
       },
-    };
+    });
 
-    await dbClient.put(params).promise();
+    await docClient.send(command);
     const item = await this.find<T>(recordId);
     return item;
   }
@@ -55,8 +66,8 @@ class DynOrm {
     updateData = {
       ...updateData,
       updated_at: new Date().toISOString(),
-    }
-    
+    };
+
     const keys = Object.keys(updateData);
     const keyNameExpressions = keys.map((name) => `#${name}`);
     const keyValueExpressions = keys.map((value) => `:${value}`);
@@ -77,31 +88,33 @@ class DynOrm {
       {}
     );
 
-    const params = {
+    const command = new UpdateCommand({
       TableName: this.name,
       Key: { ["id"]: key },
       UpdateExpression,
       ExpressionAttributeNames,
       ExpressionAttributeValues,
-    };
-    await dbClient.update(params).promise();
+    });
+
+    await docClient.send(command);
     const item = await this.find<T>(key);
     return item;
   }
 
-  async delete(key: string): Promise<{ success: boolean }> {
-    const params = {
+  async delete(key: string): Promise<any> {
+    const command = new DeleteCommand({
       TableName: this.name,
       Key: {
         id: key,
       },
-    };
+    });
 
-    return dbClient
-      .delete(params)
-      .promise()
-      .then(() => ({ success: true }))
-      .catch(() => ({ success: false }));
+    try {
+      await docClient.send(command);
+      return { success: true };
+    } catch (err) {
+      return { success: false}
+    }
   }
 }
 

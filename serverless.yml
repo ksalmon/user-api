@@ -20,6 +20,7 @@ custom:
 plugins:
   - serverless-esbuild
   - serverless-dynamodb
+  - serverless-dotenv-plugin
   - serverless-offline # must be loaded after for some reason...
 
 provider:
