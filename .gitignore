@@ -2,3 +2,5 @@
 .eslint
 .dynamodb
 .env
+.esbuild
+coverage/

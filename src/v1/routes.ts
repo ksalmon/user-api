@@ -1,4 +1,4 @@
-import express from "express";
+import * as express from "express";
 import { HealthController } from "./entities/health/health.controller"
 import { UserController } from "./entities/user/user.controller";
 
