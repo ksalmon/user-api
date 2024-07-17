@@ -23,7 +23,7 @@ The fastest and least problamatic way to deploy to production is to have the las
 
 Next please run `aws configure` to [setup](https://docs.aws.amazon.com/cli/latest/reference/configure/) the region and enter any credentials from your AWS account.
 
-Next add a `.env.production` with ```AWS_DYNAMODB_ENDPOINT={https://dynamodb.{AWS_REGION}.amazonaws.com}``` and replace the AWS_REGION var with whatever you set when you ran `aws configure`. 
+Next add a `.env.production` with ```AWS_DYNAMODB_ENDPOINT=https://dynamodb.{AWS_REGION}.amazonaws.com``` and replace the AWS_REGION var with whatever you set when you ran `aws configure`. 
 
 Lastly, run `npm run deploy` which will return you an endpoint once successfully deployed
 
